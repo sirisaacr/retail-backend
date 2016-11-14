@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    ProductAttribute = require('../models/m_product');
 
 var AttributeSchema = mongoose.Schema({
     price       : {
@@ -14,12 +15,12 @@ var AttributeSchema = mongoose.Schema({
                     "default"  : 0 
                   },
     state       : {
-                    "type"     : Number,
-                    "default"  : 0 
+                    "type"     : String,
+                    "default"  : 'No State' 
                   },
     style       : {
-                    "type"     : Number,
-                    "default"  : 0  
+                    "type"     : String,
+                    "default"  : 'No style'
                   },
     color       : {
                     "type"     : String,

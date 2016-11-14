@@ -1,6 +1,8 @@
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema,
-    bcrypt = require('bcrypt');
+var mongoose        = require('mongoose'),
+    Schema          = mongoose.Schema,
+    bcrypt          = require('bcrypt'),
+    Cart            = require('../models/m_cart'),
+    validator       = require('validator');;
  
  
 // Defining the mongoose model
@@ -14,12 +16,15 @@ var UserSchema = new Schema({
                     "required"    : true
                 },
     type:       {
-                    "type"      : Number,
-                    "default"   : 0 // 0 normal user, 1 seller user, 2 normal by social, 3 seller by social 
+                    "type"      : Boolean,
+                    "default"   : false // false is normal, true is seller 
                 },
-    birthday:   {
-                    "type"      : Date,
-                    "default"   : Date.now 
+    email:      {
+                    "type"      : String,
+                    "lowercase" : true,
+                    "unique"    : true,
+                    "required"  : true,
+                    "validate"  : [validateEmail, 'The email address is not valid'],
                 },
     username:   {
                     "type"      : String,
@@ -29,8 +34,18 @@ var UserSchema = new Schema({
     password:   {
                     "type": String,
                     "required": true
+                },
+    cart:       { 
+                    "type"      : Schema.ObjectId, 
+                    "ref"       : 'Cart'
                 }
 });
+
+// This validates de email inserted by the user
+function validateEmail(email) {
+    var re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    return re.test(email)
+};
 
 // This converts the password to a hash before its saved to the database
 UserSchema.pre('save', function (next) {

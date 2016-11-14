@@ -9,6 +9,14 @@ router
     .get(ProductCtlr.getProducts);
 
 router
+    .route('/categories')
+    .get(ProductCtlr.getCategories);
+
+router
+    .route('/trendy')
+    .get(ProductCtlr.trendyProducts);
+
+router
     .route('/')
     .post(passport.authenticate('jwt', { session: false}), ProductCtlr.createProduct);
 

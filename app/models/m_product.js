@@ -1,4 +1,5 @@
 var mongoose = require('mongoose'),
+    ProductAttribute = require('../models/m_product_attribute'),
     Schema = mongoose.Schema;
 
 var ProductSchema = new Schema({
@@ -20,11 +21,11 @@ var ProductSchema = new Schema({
                     "items"     : { "type": Schema.Types.ObjectId },
                     "validate"  : [ minLengthValidation, '{PATH} must have at least 1 item' ]
                   },
-    attributes  : {
-                    "type"      : Array,
-                    "items"     : { "type": Schema.Types.ObjectId },
+    attributes  : [{ 
+                    "type"      : Schema.ObjectId, 
+                    "ref"       : 'Product_Attribute',
                     "validate"  : [ minLengthValidation, '{PATH} must have at least 1 item' ]
-                  },
+                  }],
     seller      : {
                     "type"      : String,
                     "required"  : [true, 'Seller username required'] 
@@ -36,7 +37,7 @@ var ProductSchema = new Schema({
 });
 
 function minLengthValidation(val) {
-  return val.length >= 1;
+  return val.length >= 1 || val != null;
 }
 
 var product = mongoose.model('Product', ProductSchema);

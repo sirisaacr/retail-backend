@@ -1,12 +1,49 @@
 var ObjectId         = require('mongoose').Types.ObjectId,
     ProductModel     = require('../models/m_product'),
     ProductAttribute = require('../models/m_product_attribute'),
-    config           = require('../../config/database'),
+    ProductCategory  = require('../models/m_categories'),
+    cloudinarycfg    = require('../../config/cloudinary'),
     authentication   = require('./c_users'),
-    jwt              = require('jsonwebtoken');
+    jwt              = require('jsonwebtoken'),
+    cloudinary       = require('cloudinary');
 
 var getProducts = function(req, res) {
     if (req.query.item)
+    {
+      ProductModel
+        .findOne({_id: new ObjectId(req.query.item)})
+        .populate('attributes') // only works if we pushed refs to children
+        .exec(function (err, products) {
+                if (err){
+                    res.json({success: false, msg: err});
+                }
+                else{
+                    res.json({success: true, product: products});
+                }
+
+        });
+    }
+    else
+    {
+        ProductModel.find(function(err, data) {
+            res.json({success: true, products: data});
+        });
+    }
+}
+
+var getCategories = function(req, res) {
+    ProductCategory.find(function(err, data) {
+        if(err){
+            res.json({success: false, msg: err});
+        }
+        else{
+            res.json({success: true, categories: data});
+        }
+    });
+}
+
+var getAttributes = function(req, res) {
+    if (req.query.attribute)
     {
       ProductModel.find(
         {
@@ -60,54 +97,108 @@ var searchProducts = function(req, res) {
   ProductModel.find(
     searchConditions,
     function(err, data) {
-      res.send(data);
+        if(err){
+            res.json({success: false, msg: "An error occured connecting to database"});
+        }
+        else{
+            res.status(200);
+            res.json({success: true, trending: data});
+        }
     }
   );
 }
+
+
+var trendyProducts = function(req, res) {
+    ProductModel
+        .find({})
+        .populate('attributes') // only works if we pushed refs to children
+        .exec(function (err, products) {
+                if (err){
+                    res.json({success: false, msg: err});
+                }
+                else{
+                    res.json({success: true, products: products});
+                }
+        });
+                
+}
+
 
 var createProduct = function(req, res) {
     var user = authentication.auth(req);
     if(user)
     {
-        var attributes = req.body.attributes;
         var categories = objectifyIds(req.body.categories);
-        
-        ProductAttribute.create(attributes, function (err, savedAttributes) { 
-            if (err) return console.log(err);
-            
-            var attributes = extractIds(savedAttributes);
-            var product = {
-                "name"        : req.body.name,
-                "description" : req.body.description,
-                "seller"      : user.username,
-                "attributes"  : attributes,
-                "categories"  : categories,
-                "pictures"    : req.body.pictures
-            }
-            ProductModel.create(product, function(err, createdProduct){
-                if (err){
-                    res.status(403);
-                }
-                else{
-                    res.status(200);
-                    res.json(createdProduct);
-                }
-            });
+        var proms = uploadPictures(req.body.pictures);
 
+        Promise.all(proms).then(
+            function(val){
+                var pictures = obtainURLS(val);
+                var product = new ProductModel({    
+                                                "name"        : req.body.name,
+                                                "description" : req.body.description,
+                                                "seller"      : user,
+                                                "categories"  : categories,
+                                                "pictures"    : pictures 
+                                            });
+                var attributes = req.body.attributes;
+
+                for (var i = 0; i < attributes.length; i++) {
+                    var attr = {
+                        "price"     : attributes[i].price,
+                        "discount"  : attributes[i].discount,
+                        "stock"     : attributes[i].stock,
+                        "state"     : attributes[i].state,
+                        "color"     : attributes[i].color,
+                        "style"     : attributes[i].style,
+                        "size"      : attributes[i].size
+                    }
+
+                    var attribute = new ProductAttribute(attr);
+                    attribute.save(function (err) {
+                        if (err){
+                            return res.json({success: false, msg: err});
+                        } 
+                    });
+                    product.attributes.push(attribute._id);
+                }
+                product.save(function(err, createdProduct){
+                    if (err){
+                        return res.json({success: false, msg: err});
+                    }
+                    else{
+                        res.json({success: true, createdProduct: createdProduct});
+                    }
+                });
         });
     }
     else{
-      res.status(403);
-      res.send({success: false, msg: 'Something very bad happend'});
-    }
+        res.status(403);
+        res.send({success: false, msg: 'Something very bad happend'});
+    }   
 }
 
-var extractIds = function(array){
-    ids = []
+var uploadPictures = function(array){
+    cloudinary.config({ 
+        cloud_name: cloudinarycfg.cloud_name, 
+        api_key: cloudinarycfg.api_key, 
+        api_secret: cloudinarycfg.api_secret 
+    });        
+    proms = []
     for (i = 0; i < array.length; i++) { 
-        ids.push(array[i]._id);
+        proms.push(cloudinary.v2.uploader.upload(array[i]));
     }
-    return ids;
+    console.log(proms);
+    return proms;
+}
+
+var obtainURLS = function(array){
+    var urls = []
+    for (i = 0; i < array.length; i++) { 
+        urls.push(array[i].secure_url);
+    }
+    return urls;
 }
 
 var objectifyIds = function(array){
@@ -118,7 +209,7 @@ var objectifyIds = function(array){
     return oIds;
 }
 
-module.exports = { getProducts, searchProducts, createProduct };
+module.exports = { getProducts, searchProducts, createProduct, trendyProducts, getCategories };
 
 // db.products.find({ $or:[ {"name" : new RegExp('producto', "i") }, 
 //                          {'description' : new RegExp('producto', "i") } ]} )
@@ -148,28 +239,5 @@ module.exports = { getProducts, searchProducts, createProduct };
 //             { categories: { $in: [ObjectId("580faff81ced8e9a25ddc3b6")] } }
 //         ]
 //       })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
