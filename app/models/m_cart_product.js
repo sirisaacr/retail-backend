@@ -1,6 +1,7 @@
 var mongoose = require('mongoose'),
     ProductAttribute = require('../models/m_product_attribute'),
     Product = require('../models/m_product_attribute'),
+    Cart = require('../models/m_cart'),
     Schema = mongoose.Schema;
 
 var CartProductSchema = new Schema({
@@ -27,6 +28,15 @@ var CartProductSchema = new Schema({
 function minLengthValidation(val) {
   return val.length >= 1 || val != null;
 }
+
+CartProductSchema.pre('remove', function(next) {
+    // Remove all the assignment docs that reference the removed person.
+    this.model('Cart').update({ products: { $in: [ this._id ] } },
+                              { $pull: { products: this._id } }, 
+                              { multi: true },  
+                              next);
+});
+
 
 var cartProduct = mongoose.model('Cart_Product', CartProductSchema);
 

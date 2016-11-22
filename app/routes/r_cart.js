@@ -9,6 +9,11 @@ router
     .post(passport.authenticate('jwt', { session: false}), cartCtlr.addProduct);
 
 router
+    .route('/removeFromCart')
+    .post(passport.authenticate('jwt', { session: false}), cartCtlr.removeProduct);
+
+
+router
     .route('/getUserCart')
     .get(passport.authenticate('jwt', { session: false}), cartCtlr.getUserCart);
 

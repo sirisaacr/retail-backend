@@ -9,6 +9,10 @@ router
     .get(ProductCtlr.getProducts);
 
 router
+    .route('/myProducts')
+    .get(ProductCtlr.getMyProducts);
+
+router
     .route('/categories')
     .get(ProductCtlr.getCategories);
 
@@ -19,6 +23,10 @@ router
 router
     .route('/')
     .post(passport.authenticate('jwt', { session: false}), ProductCtlr.createProduct);
+
+router
+    .route('/')
+    .put(passport.authenticate('jwt', { session: false}), ProductCtlr.updateProduct);
 
 
 

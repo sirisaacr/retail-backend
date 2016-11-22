@@ -1,5 +1,6 @@
 var mongoose = require('mongoose'),
     ProductAttribute = require('../models/m_product_attribute'),
+    User = require('../models/m_user'),
     Schema = mongoose.Schema;
 
 var ProductSchema = new Schema({
@@ -27,8 +28,17 @@ var ProductSchema = new Schema({
                     "validate"  : [ minLengthValidation, '{PATH} must have at least 1 item' ]
                   }],
     seller      : {
-                    "type"      : String,
+                    "type"      : Schema.ObjectId, 
+                    "ref"       : 'User',
                     "required"  : [true, 'Seller username required'] 
+                  },
+    active      : {
+                    "type"     : Boolean,
+                    "default"  : true
+                  },
+    trending    : {
+                    "type"     : Number,
+                    "default"  : 0
                   },
     created     : { 
                     "type"      : Date, 

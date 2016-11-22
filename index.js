@@ -5,6 +5,7 @@ var express         = require('express'),
     r_search        = require('./app/routes/r_search'),
     r_authenticate  = require('./app/routes/r_authentication'),
     r_cart          = require('./app/routes/r_cart'),
+    r_orders        = require('./app/routes/r_orders'),
 
     morgan          = require('morgan'),
     passport	    = require('passport'),
@@ -50,3 +51,4 @@ app.use('/products', r_product);
 app.use('/search', r_search);
 app.use('/user', r_authenticate);
 app.use('/cart', r_cart);
+app.use('/orders', r_orders);

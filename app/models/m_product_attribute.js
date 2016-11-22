@@ -1,5 +1,6 @@
 var mongoose = require('mongoose'),
-    ProductAttribute = require('../models/m_product');
+    Product = require('../models/m_product'),
+    CartProduct = require('../models/m_cart_product');
 
 var AttributeSchema = mongoose.Schema({
     price       : {
@@ -30,6 +31,10 @@ var AttributeSchema = mongoose.Schema({
                     "type"     : String,
                     "default"  : "No size" 
                   },
+    active      : {
+                    "type"     : Boolean,
+                    "default"  : true
+                  },
     created     : { 
                     "type"      : Date, 
                     "default"   : Date.now 
@@ -37,6 +42,14 @@ var AttributeSchema = mongoose.Schema({
 });
 
 var attribute = mongoose.model('Product_Attribute', AttributeSchema);
+
+// AttributeSchema.pre('update', function(next) {
+//     // Remove all the assignment docs that reference the removed person.
+//     this.model('Product').update({ attributes: { $in: [ this._id ] } },
+//                                                { $pull: { attributes: this._id } }, 
+//                                                { multi: true },  
+//                                                next);
+// });
 
 module.exports = attribute;
 

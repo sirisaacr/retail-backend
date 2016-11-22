@@ -4,7 +4,7 @@ var ObjectId         = require('mongoose').Types.ObjectId,
     User             = require('../models/m_user'),
     authentication   = require('./c_users');
 
-
+// This function is used to return the cart of the user when logs in
 var getUserCart = function(req, res){
     var user = authentication.auth(req);
     if(user)
@@ -17,13 +17,13 @@ var getUserCart = function(req, res){
                                 path: 'products',
                                 populate: [{
                                             path: 'attribute',
-                                            select:'price discount state style color size'
+                                            select:'price discount state style color size active'
                                           },
                                           {
                                             path: 'product',
                                             select:'name pictures'
                                           }
-                                          ] 
+                                          ]
                           }
             })
             .exec(function(err, result){
@@ -33,8 +33,9 @@ var getUserCart = function(req, res){
     }
 }
 
+// This funtion is used to return a product after it is added to the cart,
+// Its not used in any api call directly, this is called by addProduct function
 var getUserCartProduct = function(user, attribute_id){
-    console.log(attribute_id);
     return new Promise(function(resolve, reject){
         User.findOne({_id: user})
         .select('cart')
@@ -44,14 +45,15 @@ var getUserCartProduct = function(user, attribute_id){
                         path: 'products',
                         populate: [{
                                         path: 'attribute',
-                                        select:'price discount state style color size'
+                                        select:'active price discount state style color size',
+                                        match   : { 'active': true }
                                     },
                                     {
                                         path: 'product',
                                         select:'name pictures'
                                     }],
-                         match   : { 'attribute': { $eq: ObjectId(attribute_id) } }
-                        }
+                        match   : { 'attribute': ObjectId(attribute_id) }                         
+                      }
         })
         .exec(function(err, result){
             resolve(result.cart); 
@@ -59,6 +61,7 @@ var getUserCartProduct = function(user, attribute_id){
     });
 }
 
+// This function is used to add a product to the user cart
 var addProduct = function(req, res) {
     var user = authentication.auth(req);
     if(user)
@@ -107,4 +110,35 @@ var addProduct = function(req, res) {
     }       
 }
 
-module.exports = { addProduct, getUserCart };
+// This function is used to remove a product from the user cart
+var removeProduct = function(req, res){
+    var user = authentication.auth(req);
+    if(user)
+    {
+        var product = req.body._id;
+        CartProduct.findOne({ "_id": ObjectId(product) })
+                    .exec(function(err, product){
+                        if (err){
+                            res.status(403);
+                            res.send({success: false, msg: 'Something very bad happend'});
+                        }
+                        else{
+                            product.remove(function(err, deletedProduct) {
+                                if (err){
+                                    res.status(403);
+                                    res.send({success: false, msg: 'Something very bad happend'});
+                                }
+                                else{
+                                    res.send({success: true, deletedProduct: deletedProduct }); 
+                                }   
+                            });
+                        }                        
+                    }); 
+    }
+    else{
+        res.status(403);
+        res.send({success: false, msg: 'Something very bad happend'});
+    }   
+}
+
+module.exports = { addProduct, getUserCart, removeProduct };

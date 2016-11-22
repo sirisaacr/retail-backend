@@ -60,7 +60,10 @@ var authenticate = function(req, res) {
             }
             else{
               res.status(200);
-              res.json({success: true, token: token, cart: { _id: cart._id, size: cart.products.length } });
+              res.json({success: true, 
+                        token: token, 
+                        type: user.type
+                      });
             }
           });
 
@@ -98,11 +101,6 @@ var userinfo = function(req, res) {
   }
 }
 
-var canIbe = function(req, res) {
-      res.status(200);
-      res.json({ success: true });
-}
-
 var auth = function(req) {
   var token = req.headers.authorization.split(' ')[1];
   var _doc;
@@ -121,4 +119,4 @@ var auth = function(req) {
   }
 };
 
-module.exports = { signup, authenticate, userinfo, auth, canIbe };
+module.exports = { signup, authenticate, userinfo, auth };

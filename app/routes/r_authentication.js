@@ -16,8 +16,5 @@ router
     .route('/userinfo')
     .get(passport.authenticate('jwt', { session: false}), UserCtlr.userinfo);
 
-router
-    .route('/canIbe')
-    .get(passport.authenticate('jwt', { session: false}), UserCtlr.canIbe);
 
 module.exports = router;
